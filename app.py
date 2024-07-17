@@ -1,9 +1,19 @@
 from itertools import islice
 
 from duckduckgo_search import DDGS
-from flask import Flask, request
+from flask import Flask, request, jsonify
+import config
 
 app = Flask(__name__)
+app.config['JSON_AS_ASCII'] = False
+app.config['JSONIFY_MIMETYPE'] = 'application/json;charset=UTF-8'
+app.config.from_object(config)
+
+VALID_TOKEN = app.config['AUTH_TOKEN']
+
+
+def authenticate():
+    return jsonify({'error': 'Invalid token'}), 403
 
 
 def run():
@@ -19,6 +29,9 @@ def run():
 
 @app.route('/search', methods=['GET', 'POST'])
 async def search():
+    auth = request.headers.get('token')
+    if auth != VALID_TOKEN:
+        return authenticate()
     keywords, max_results = run()
     results = []
     with DDGS() as ddgs:
@@ -29,11 +42,14 @@ async def search():
             results.append(r)
 
     # 返回一个json响应，包含搜索结果
-    return {'results': results}
+    return {'data': results}
 
 
 @app.route('/searchAnswers', methods=['GET', 'POST'])
 async def search_answers():
+    auth = request.headers.get('token')
+    if auth != VALID_TOKEN:
+        return authenticate()
     keywords, max_results = run()
     results = []
     with DDGS() as ddgs:
@@ -44,11 +60,14 @@ async def search_answers():
             results.append(r)
 
     # 返回一个json响应，包含搜索结果
-    return {'results': results}
+    return {'data': results}
 
 
 @app.route('/searchImages', methods=['GET', 'POST'])
 async def search_images():
+    auth = request.headers.get('token')
+    if auth != VALID_TOKEN:
+        return authenticate()
     keywords, max_results = run()
     results = []
     with DDGS() as ddgs:
@@ -59,11 +78,14 @@ async def search_images():
             results.append(r)
 
     # 返回一个json响应，包含搜索结果
-    return {'results': results}
+    return {'data': results}
 
 
 @app.route('/searchVideos', methods=['GET', 'POST'])
 async def search_videos():
+    auth = request.headers.get('token')
+    if auth != VALID_TOKEN:
+        return authenticate()
     keywords, max_results = run()
     results = []
     with DDGS() as ddgs:
@@ -74,7 +96,7 @@ async def search_videos():
             results.append(r)
 
     # 返回一个json响应，包含搜索结果
-    return {'results': results}
+    return {'data': results}
 
 
 if __name__ == '__main__':
